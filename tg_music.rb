@@ -3,20 +3,26 @@ require 'net/http'
 require 'json'
 require 'open-uri'
 require 'uri'
+require 'logger'
 require "vk-ruby"
+
 token = '125138084:AAGSYcxwt_yJTyrhLTyqgviCmvwb1-2A-C4'
-
-
+@log = Logger.new('log.txt')
 
 def download_song(song_name)
-  app = VK::Application.new(app_id: 4930402, version: '5.37', access_token:'7f8cbb7c49ef587fe95e041eb2a28325d79dce3747c97ce708fa5fbeed2990c78ef30eecf9d692520a6fe')
-  song =  app.audio.search q: song_name, count: 1
-  song_url =  song["items"][0]["url"]
+  url = "https://api.vk.com/method/audio.search?
+  access_token=7f8cbb7c49ef587fe95e041eb2a28325d79dce374
+  7c97ce708fa5fbeed2990c78ef30eecf9d692520a6fe&q
+  ="+song_name+"&count=1"
+  url = URI.parse(URI.encode(url)).to_s.gsub("%0A%20%20","")
+  uri = URI(url)
+  response = Net::HTTP.get(uri)
+  @log.debug song_name
+  song_url = JSON.parse(response)["response"][1]["url"]
   open('song_from_vk.ogg', 'wb') do |file|
     file << open(song_url).read
   end
 end
-
 Telegram::Bot::Client.run(token) do |bot|
   bot.listen do |message|
     message.text
@@ -29,5 +35,4 @@ Telegram::Bot::Client.run(token) do |bot|
     
   end
 end
-
 
